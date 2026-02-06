@@ -1,0 +1,44 @@
+---
+architecture:
+  n_layers: 3
+  n_neurons: 256
+  activation_type: 0
+  learn_var: true
+ppo:
+  gamma: 0.99
+  lambda: 0.95
+  K_epochs: 1
+  norm_A: true
+  eps_clip: 0.2
+  c1: 0.5
+  c2: 0.01
+  c2_schedule: 0.999
+  clip_grads: true
+  learn_var: true
+  init_var: -0.5
+  min_memory: 100
+  lr_actor: 0.0001 #3
+  lr_critic: 0.0001 #3
+  batch_size: 2048 #64 #2048
+  update_epochs: 1
+  frq_actor_update: 1
+  frq_training: 1_000 #2048
+sac:
+  gamma: 0.99
+  tau: 0.005
+  min_memory: 25_000
+  lr_actor: 0.0003
+  lr_critic: 0.0003
+  lr_alpha: 0.0003
+  size_buffer: 100_000 #300_000 #100000 #300000 #500000 # 65000 #300000
+  batch_size: 256 #16 #256 #8 #256
+  init_alpha: 0.2
+  update_epochs: 1
+  frq_actor_update: 1
+  reward_scaling: false
+  gradient_clipping_max: 10 #-1
+  n_ensemble_critics: 2 #1 #2
+  frq_training: 1
+n_workers: 8 #16
+norm_state_epochs: 200_000
+...

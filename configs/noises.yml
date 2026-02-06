@@ -1,0 +1,77 @@
+---
+mujoco:
+  gaussian_noise:
+    mean:
+      state: 0.0
+      image: 0.0
+      depth: 0.0
+    std:
+      state: 0.1
+      image: 25.0
+      depth: 25.0
+  salt_and_pepper_noise:
+    ratio: 0.3
+    max:
+      state: 100
+      image: 255
+      depth: 255
+  patches_noise:
+    patch_ratio: 0.3
+  puzzle_noise:
+    n_patches: 3
+  sensor_failure:
+  texture_noise:
+    min_depth: 0.99
+  hallucination_noise:
+fetch:
+  gaussian_noise:
+    mean:
+      state: 0.0
+      image: 0.0
+      depth: 0.0
+      pointcloud: 0.0
+    std:
+      state: 0.1
+      image: 25.0
+      depth: 25.0
+      pointcloud: 0.03
+  salt_and_pepper_noise:
+    ratio: 0.9 #0.3
+    max:
+      state: 100
+      image: 255
+      depth: 255
+      pointcloud: 3
+  patches_noise:
+    patch_ratio: 0.5
+  puzzle_noise:
+    n_patches: 3
+  sensor_failure:
+  texture_noise:
+    min_depth: 0.99
+  hallucination_noise:
+pendulum:
+  gaussian_noise:
+    mean:
+      state: 0.0
+      image: 0.0
+      sound: [1.0, 1.0, 1.0, 0.11, 0.11, 0.11]
+    std:
+      state: 0.1
+      image: 25.0
+      sound: [0.18, 0.18, 0.18, 0.05, 0.05, 0.05]
+  salt_and_pepper_noise:
+    ratio: 0.3
+    max:
+      state: 100
+      image: 255
+      sound: [2.0, 2.0, 2.0, 1.0, 1.0, 1.0]
+  patches_noise:
+    patch_ratio: 0.3
+  puzzle_noise:
+    n_patches: 3
+  sensor_failure:
+  texture_noise:
+    min_depth: 0.99
+  hallucination_noise:
+...
