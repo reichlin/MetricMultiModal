@@ -1,14 +1,3 @@
-pip3 install git+https://github.com/Farama-Foundation/Gymnasium.git@ac1e7444cb9e5ddbfb4fc56e76710ecfd3a1c786
-
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-
-pip3 install . -e
-
-
-
-
-
-
 # Multimodal RL under Noise — README
 
 > **TL;DR (quick start)**
@@ -67,14 +56,11 @@ This repository trains and evaluates reinforcement-learning agents that receive 
 
 The core pieces are:
 
-- `trainer.py` — main training loop & CLI.
-- `run_eval.py` — evaluation / rendering script (currently partially hard‑coded; see §6 to add CLI arguments).
-- `gym_environment.py` — wraps Gymnasium envs, adds multimodal observations + noise injection.
+- `trainer_mujoco.py` or `trainer_fetch.py` - trainers for either the mujoco environments of the fetch environments.
+- `envs/` — wraps Gymnasium envs, adds multimodal observations + noise injection.
 - `preprocessors/` — encoders used to create latent `z` from modalities.
 - `rl_algos/` — SAC and PPO implementations that consume the latent representation.
 - `configs/` — YAML defaults for RL hyperparameters (`rl.yml`) and per-noise settings (`noises.yml`).
-- `launch_scripts/` — helper scripts for clusters (Berzelius, etc.).
-- `bg_images/` — background images used when rendering noisy RGB.
 - `utils.py`, `architectures.py`, `rl_utils.py`, `noises.py` — logging, NN blocks, replay buffers, and noise functions.
 
 ---
@@ -87,37 +73,6 @@ conda env create -f environment.yml
 conda activate multimodal
 ```
 This installs Python 3.8 and all pinned pip packages (PyTorch 2.4+, Gymnasium, MuJoCo, etc.). If MuJoCo rendering fails on headless servers, install EGL or set `MUJOCO_GL=egl`.
-
----
-
-## 3. Repository Structure
-```
-code/
-├── trainer.py               # main training script
-├── run_eval.py              # evaluation/visualization script
-├── make_tables.py           # aggregation utilities for results
-├── gym_environment.py       # multimodal env + noise wrapper
-├── noises.py                # noise functions
-├── architectures.py         # shared NN blocks (MLPs/CNNs)
-├── rl_utils.py              # replay buffer, etc.
-├── utils.py                 # logger/TensorBoard writer
-├── configs/
-│   ├── rl.yml               # RL hyperparameters (SAC/PPO)
-│   └── noises.yml           # noise parameters per modality
-├── rl_algos/                # RL algorithm implementations
-│   ├── sac.py
-│   └── ppo.py
-├── preprocessors/           # representation learners
-│   ├── linear_comb.py
-│   ├── concatenation.py
-│   ├── curl.py
-│   ├── mmm.py
-│   ├── gmc.py
-│   ├── amdf.py
-│   └── coral.py
-├── launch_scripts/          # cluster & GPU helper scripts
-└── bg_images/               # optional backgrounds for image noise
-```
 
 ---
 
@@ -138,15 +93,10 @@ code/
 | `--save_model` | int | 1 | Save checkpoints in `checkpoints/` |
 | `--reload` | int | 0 | Resume from latest checkpoint if available |
 
-### 4.1 Examples
+### 4.1 Example
 **SAC + CURL on Walker2d, moderate Gaussian noise, use image+depth only:**
 ```bash
 python trainer.py --seed 42 --algo 2 --rl_algo 0 --env_id 4   --modalities 2 --no_state 1 --noise_level 0.3
-```
-
-**PPO + LinearComb on Ant using all modalities, no noise, larger latent:**
-```bash
-python trainer.py --seed 7 --algo 0 --rl_algo 1 --env_id 0   --modalities 3 --no_state 0 --z_dim 128 --noise_level 0.0
 ```
 
 ### 4.2 Changing hyperparameters
@@ -161,37 +111,11 @@ python trainer.py --seed 7 --algo 0 --rl_algo 1 --env_id 0   --modalities 3 --no
 
 ---
 
-## 6. Evaluation & Rendering
-`run_eval.py` loads a trained model, rolls out episodes, and can save frames. Right now, some values (seed, algo, env, noise lists) are set near the top of the file. To make it easier:
-
-1. **Add argparse to `run_eval.py`:**
-   ```python
-   parser = argparse.ArgumentParser()
-   parser.add_argument('--checkpoint', type=str, required=True)
-   parser.add_argument('--algo', type=int, default=6)
-   parser.add_argument('--env_id', type=int, default=1)
-   parser.add_argument('--render_mode', type=str, default='image')
-   parser.add_argument('--p_noise', type=float, default=0.0)
-   # ... etc.
-   args = parser.parse_args()
-   ```
-2. Load weights into the matching encoder/RL combo and run rollout.
-
----
-
 ## 7. Logging & Outputs
 - **TensorBoard logs:** `logs/<rl_algo>/<exp_name>/` (see `utils.Logger`).
   ```bash
   tensorboard --logdir logs --port 6006
   ```
-
----
-
-## 8. Cluster / GPU Helpers
-`launch_scripts/` contains:
-- `train_berzelius.sh`, `launch_berzelius.sh`, `test_berzelius.sh` — templates to submit jobs.
-- `integrate_gpu.py` — intentionally burns GPU cycles to meet power budgets (see comments).
-- Adapt these to your scheduler (Slurm, etc.).
 
 ---
 
@@ -201,13 +125,6 @@ python trainer.py --seed 7 --algo 0 --rl_algo 1 --env_id 0   --modalities 3 --no
 - **Modalities mismatch:** ensure `--modalities` matches what your encoder expects (e.g., some encoders require images).
 - **Noise + modality:** Some noises only apply to images or depth; double-check `COMPATIBILITY_NOISES`.
 - **Seeds:** SAC uses a random warm-up of `start_steps=1e3` (see `trainer.py`). Make seeds reproducible by setting all torch/np seeds.
-
----
-
-## 10. Extending the Codebase
-- **Add a new encoder/preprocessor:** create `preprocessors/<name>.py`, implement a class with `forward(obs)` returning `z`, then add it to the `algo_encodings` dict in `trainer.py`.
-- **Add a new RL algorithm:** put it in `rl_algos/`, subclass a common interface (`RL_ALGO` in `rl_algos/rl_base.py`), add an option in `trainer.py`.
-- **Add a new noise:** implement a function in `noises.py`, register it in `COMPATIBILITY_NOISES` and `noises.yml`.
 
 ---
 
